@@ -31,6 +31,8 @@ pub enum ConfigActions {
 pub enum VaultActions {
     /// Initializes the vault
     Initialize {
+        /// The VRT mint keypair path
+        vrt_mint_path: String,
         /// The token which is allowed to be deposited into the vault
         token_mint: String,
         /// The deposit fee in bips
@@ -60,4 +62,58 @@ pub enum VaultActions {
     },
     /// List all vaults
     List,
+    /// Sets the deposit capacity in the vault
+    SetCapacity {
+        /// The vault pubkey
+        vault: String,
+        /// The new capacity
+        amount: u64,
+    },
+    /// Set secondary admin
+    SetSecondaryAdmin {
+        /// Vault account
+        vault: String,
+        /// New admin
+        new_admin: String,
+        /// Role
+        role: String,
+    },
+    InitializeUpdateStateTracker {
+        /// Vault account
+        vault: String,
+    },
+    CloseUpdateStateTracker {
+        /// Vault account
+        vault: String,
+        /// Optional NCN epoch to close
+        ncn_epoch: Option<u64>,
+    },
+    MintVRT {
+        /// Vault account
+        vault: String,
+        /// Amount to deposit
+        amount_in: u64,
+        /// Minimum amount of VRT to mint
+        min_amount_out: u64,
+    },
+    EnqueueWithdrawal {
+        /// Vault account
+        vault: String,
+        /// Amount to withdraw
+        amount: u64,
+    },
+    CrankUpdateStateTracker {
+        /// Vault account
+        vault: String,
+        /// Operator account
+        operator: String,
+        /// NCN epoch to crank
+        ncn_epoch: Option<u64>,
+    },
+    BurnWithdrawalTicket {
+        /// Vault account
+        vault: String,
+        /// Minimum amount of VRT to mint
+        min_amount_out: u64,
+    },
 }
