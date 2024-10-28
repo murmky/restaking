@@ -15,7 +15,8 @@ use jito_vault_client::{
         MintToBuilder,
         SetSecondaryAdminBuilder,
         SetDepositCapacityBuilder,
-        CrankVaultUpdateStateTrackerBuilder
+        CrankVaultUpdateStateTrackerBuilder,
+        SetAdminBuilder,
     },
     types::WithdrawalAllocationMethod,
 };
@@ -37,6 +38,7 @@ use solana_rpc_client_api::{
     filter::{Memcmp, MemcmpEncodedBytes, RpcFilterType},
 };
 use solana_sdk::{
+    bs58,
     signature::{Keypair, Signer},
     transaction::Transaction,
 };
@@ -174,6 +176,18 @@ impl VaultCliHandler {
                         min_amount_out,
                     },
             } => self.burn_withdrawal_ticket(vault, min_amount_out).await,
+            VaultCommands::Vault {
+                action:
+                VaultActions::BuildSetAdminTx {
+                    vault,
+                    new_admin,
+                },
+            } => {
+                self.build_set_admin_tx(
+                    vault,
+                    new_admin,
+                ).await
+            }
         }
     }
 
@@ -915,6 +929,43 @@ impl VaultCliHandler {
         }
 
         info!("Transaction confirmed: {:?}", tx.get_signature());
+
+        Ok(())
+    }
+
+    pub async fn build_set_admin_tx(
+        &self,
+        vault: String,
+        new_admin: String,
+    ) -> Result<()> {
+        let keypair = self
+            .cli_config
+            .keypair
+            .as_ref()
+            .ok_or_else(|| anyhow!("Keypair not provided"))?;
+        let rpc_client = self.get_rpc_client();
+
+        let vault = Pubkey::from_str(&vault)?;
+        let new_admin = Pubkey::from_str(&new_admin)?;
+
+        let mut ix_builder = SetAdminBuilder::new();
+        ix_builder
+            .config(Config::find_program_address(&self.vault_program_id).0)
+            .vault(vault)
+            .old_admin(keypair.pubkey())
+            .new_admin(new_admin);
+
+        let mut tx = Transaction::new_unsigned(solana_program::message::legacy::Message::new(
+            &[ix_builder.instruction()],
+            Some(&keypair.pubkey()),
+        ));
+
+        let blockhash = rpc_client.get_latest_blockhash().await?;
+        // tx.partial_sign(&[keypair], blockhash);
+
+        let data = bs58::encode(bincode::serialize(&tx)?).into_string();
+
+        info!("Squads tx: {:?}", data);
 
         Ok(())
     }

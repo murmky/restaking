@@ -116,4 +116,9 @@ pub enum VaultActions {
         /// Minimum amount of VRT to mint
         min_amount_out: u64,
     },
+    /// Set admin
+    BuildSetAdminTx {
+        vault: String,
+        new_admin: String
+    },
 }

@@ -2382,6 +2382,7 @@ version = "0.0.2"
 dependencies = [
  "anyhow",
  "assert_matches",
+ "bincode",
  "borsh 0.10.3",
  "bytemuck",
  "chrono",
